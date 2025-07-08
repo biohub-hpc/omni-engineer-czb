@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 import requests
 from PIL import Image
 from io import BytesIO
+import ollama
 
 import select
 
@@ -35,17 +36,19 @@ is_diff_on = True
 init(autoreset=True)
 load_dotenv()
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
-base_url = "https://api.cborg.lbl.gov"
 client = OpenAI(
-    base_url=base_url,
-    api_key=os.getenv("CBORG_API_KEY"),
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
 )
 
 # Some model options available at LBL
-DEFAULT_MODEL = "lbl/cborg-coder:latest"
-EDITOR_MODEL = "lbl/cborg-coder:latest"
+#EDITOR_MODEL = "qwen2.5-coder:3b"
+#DEFAULT_MODEL = "qwen2.5-coder:3b"
+#DEFAULT_MODEL = "lbl/cborg-coder:latest"
+#EDITOR_MODEL = "lbl/cborg-coder:latest"
 #DEFAULT_MODEL = "lbl/deepseek-r1:llama-70b
-#DEFAULT_MODEL= "openai/gpt-4o" 
+DEFAULT_MODEL= "phi4:latest" 
+#DEFAULT_MODEL= "deepseek-r1:8b"
 #DEFAULT_MODEL = "openai/gpt-4o-mini" 
 #DEFAULT_MODEL = "openai/o1"
 #DEFAULT_MODEL = "openai/o1-mini"
@@ -60,7 +63,7 @@ EDITOR_MODEL = "lbl/cborg-coder:latest"
 #DEFAULT_MODEL = "aws/command-r-plus-v1"
 #DEFAULT_MODEL = "aws/command-r-v1"
 #EDITOR_MODEL = "lbl/deepseek-r1:llama-70b
-#EDITOR_MODEL = "openai/gpt-4o-mini"
+EDITOR_MODEL = "qwen2.5-coder:3b"
 #EDITOR_MODEL = "openai/o1"
 #EDITOR_MODEL = "openai/o1-mini"
 #EDITOR_MODEL = "anthropic/claude-haiku"
@@ -246,9 +249,22 @@ def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end='\n'):
     """Print text with specified color and style."""
     print(f"{style}{color}{text}{Style.RESET_ALL}", end=end)
 
+def check_model(model):
+    models=ollama.list()
+    found = False
+    for model_info in models['models']:
+      if( model == model_info['model'] ):
+        print_colored("Found Model locally",Fore.CYAN)
+        found = True
+        break
+    if( found != True ):
+      print_colored("Downloading Model",Fore.CYAN)
+      ollama.pull(model) 
+
 def get_streaming_response(messages, model):
     """Get a streaming response from the AI model."""
     try:
+        check_model(model)
         stream = client.chat.completions.create(
             model=model,
             messages=messages,
@@ -272,6 +288,7 @@ def get_streaming_response(messages, model):
         return full_response.strip()
     except Exception as e:
         print_colored(f"Error in streaming response: {e}", Fore.RED)
+        ollama.pull(model)
         return None 
 
 def read_file_content(filepath):
@@ -328,10 +345,10 @@ def check_model_security():
     """Check and display warnings for both DEFAULT_MODEL and EDITOR_MODEL."""
     if not is_lbl_model(DEFAULT_MODEL):
         print_colored(f"DEFAULT_MODEL: {DEFAULT_MODEL}", Fore.CYAN)
-        show_model_warning(DEFAULT_MODEL)
+#       show_model_warning(DEFAULT_MODEL)
     if not is_lbl_model(EDITOR_MODEL):
         print_colored(f"EDITOR_MODEL: {EDITOR_MODEL}", Fore.CYAN)
-        show_model_warning(EDITOR_MODEL)
+#       show_model_warning(EDITOR_MODEL)
 
 async def handle_add_command(chat_history, *paths):
     """Add files or directories to the chat history."""
@@ -629,6 +646,7 @@ def print_welcome_message():
     table.add_row("/help", "Show this help message")
     table.add_row("/model", "Show current AI model")
     table.add_row("/change_model", "Change the AI model")
+    table.add_row("/list_models", "List the LLMs currently downloaded")
     table.add_row("/show", "Show content of a file")
     table.add_row("exit", "Exit the application")
 
@@ -667,6 +685,11 @@ async def handle_help_command():
 
 def show_current_model():
     print_colored(f"Current model: {DEFAULT_MODEL}", Fore.CYAN)
+
+def list_models():
+    models=ollama.list()
+    for model_info in models['models']:
+      print_colored(model_info['model'],Fore.CYAN)
 
 async def change_model():
     global DEFAULT_MODEL
@@ -838,6 +861,10 @@ async def main():
 
             if prompt.startswith("/change_model"):
                 await change_model()
+                continue
+
+            if prompt.startswith("/list_models"):
+                list_models()
                 continue
 
             if prompt.startswith("/show "):
