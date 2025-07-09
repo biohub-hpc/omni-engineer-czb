@@ -41,41 +41,12 @@ client = OpenAI(
         api_key="ollama",
 )
 
-# Some model options available at LBL
+# Some model options available at CZB
 #EDITOR_MODEL = "qwen2.5-coder:3b"
 #DEFAULT_MODEL = "qwen2.5-coder:3b"
-#DEFAULT_MODEL = "lbl/cborg-coder:latest"
-#EDITOR_MODEL = "lbl/cborg-coder:latest"
-#DEFAULT_MODEL = "lbl/deepseek-r1:llama-70b
-DEFAULT_MODEL= "phi4:latest" 
-#DEFAULT_MODEL= "deepseek-r1:8b"
-#DEFAULT_MODEL = "openai/gpt-4o-mini" 
-#DEFAULT_MODEL = "openai/o1"
-#DEFAULT_MODEL = "openai/o1-mini"
-#DEFAULT_MODEL = "anthropic/claude-haiku"
-#DEFAULT_MODEL = "anthropic/claude-sonnet"
-#DEFAULT_MODEL = "anthropic/claude-opus"
-#DEFAULT_MODEL = "google/gemini-pro"
-#DEFAULT_MODEL = "google/gemini-flash"
-#DEFAULT_MODEL = "aws/llama-3.1-405b"
-#DEFAULT_MODEL = "aws/llama-3.1-70b"
-#DEFAULT_MODEL = "aws/llama-3.1-8b"
-#DEFAULT_MODEL = "aws/command-r-plus-v1"
-#DEFAULT_MODEL = "aws/command-r-v1"
-#EDITOR_MODEL = "lbl/deepseek-r1:llama-70b
+#DEFAULT_MODEL= "phi4:latest" 
+DEFAULT_MODEL = "llama3:latest"
 EDITOR_MODEL = "qwen2.5-coder:3b"
-#EDITOR_MODEL = "openai/o1"
-#EDITOR_MODEL = "openai/o1-mini"
-#EDITOR_MODEL = "anthropic/claude-haiku"
-#EDITOR_MODEL = "anthropic/claude-sonnet"
-#EDITOR_MODEL = "anthropic/claude-opus"
-#EDITOR_MODEL = "google/gemini-pro"
-#EDITOR_MODEL = "google/gemini-flash"
-#EDITOR_MODEL = "aws/llama-3.1-405b"
-#EDITOR_MODEL = "aws/llama-3.1-70b"
-#EDITOR_MODEL = "aws/llama-3.1-8b"
-#EDITOR_MODEL = "aws/command-r-plus-v1"
-#EDITOR_MODEL = "aws/command-r-v1"
 
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
@@ -92,7 +63,7 @@ When given an /edit instruction:
 EDITOR_PROMPT = """You are a code-editing AI. Your mission:
 
 ULTRA IMPORTANT:
-- YOU NEVER!!! add the type of file at the beginning of the file like ```python etq.
+- YOU NEVER!!! add the type of file at the beginning of the file like ```python etc.
 - YOU NEVER!!! add ``` at the start or end of the file meaning you never add anything that is not the code at the start or end of the file.
 
 - Execute line-by-line edit instructions safely
