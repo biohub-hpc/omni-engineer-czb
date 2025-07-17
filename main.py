@@ -18,7 +18,6 @@ from urllib.parse import urlparse
 import requests
 from PIL import Image
 from io import BytesIO
-import ollama
 
 import select
 
@@ -37,16 +36,13 @@ init(autoreset=True)
 load_dotenv()
 # Local clients/VPN users can also use https://api-local.cborg.lbl.gov
 client = OpenAI(
-        base_url="http://localhost:11434/v1",
+        base_url="http://sam.clusternet:8000/v1",
         api_key="ollama",
 )
 
 # Some model options available at CZB
-#EDITOR_MODEL = "qwen2.5-coder:3b"
-#DEFAULT_MODEL = "qwen2.5-coder:3b"
-#DEFAULT_MODEL= "phi4:latest" 
-DEFAULT_MODEL = "llama3:latest"
-EDITOR_MODEL = "qwen2.5-coder:3b"
+DEFAULT_MODEL = "openai/gpt-4"
+EDITOR_MODEL = "openai/gpt-3.5-turbo"
 
 SYSTEM_PROMPT = """You are an incredible developer assistant. You have the following traits:
 - You write clean, efficient code
@@ -85,7 +81,7 @@ file_templates = {
 undo_history = {}
 stored_images = {}
 command_history = FileHistory('.aiconsole_history.txt')
-commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/show', 'exit'], ignore_case=True)
+commands = WordCompleter(['/add', '/edit', '/new', '/search', '/image', '/clear', '/reset', '/diff', '/history', '/save', '/load', '/undo', '/help', '/model', '/change_model', '/change_ediort', '/show', 'exit'], ignore_case=True)
 session = PromptSession(history=command_history)
 force_exit = False
 interrupt_output = False
@@ -221,16 +217,15 @@ def print_colored(text, color=Fore.WHITE, style=Style.NORMAL, end='\n'):
     print(f"{style}{color}{text}{Style.RESET_ALL}", end=end)
 
 def check_model(model):
-    models=ollama.list()
+    models = client.models.list()
     found = False
-    for model_info in models['models']:
-      if( model == model_info['model'] ):
-        print_colored("Found Model locally",Fore.CYAN)
+    for model_info in models:
+      if( model == model_info.id ):
+        print_colored(f"{model}:",Fore.CYAN)
         found = True
         break
     if( found != True ):
-      print_colored("Downloading Model",Fore.CYAN)
-      ollama.pull(model) 
+      print_colored("Selected Model is not available",Fore.CYAN)
 
 def get_streaming_response(messages, model):
     """Get a streaming response from the AI model."""
@@ -259,7 +254,6 @@ def get_streaming_response(messages, model):
         return full_response.strip()
     except Exception as e:
         print_colored(f"Error in streaming response: {e}", Fore.RED)
-        ollama.pull(model)
         return None 
 
 def read_file_content(filepath):
@@ -617,6 +611,7 @@ def print_welcome_message():
     table.add_row("/help", "Show this help message")
     table.add_row("/model", "Show current AI model")
     table.add_row("/change_model", "Change the AI model")
+    table.add_row("/change_editor", "Change the editor model")
     table.add_row("/list_models", "List the LLMs currently downloaded")
     table.add_row("/show", "Show content of a file")
     table.add_row("exit", "Exit the application")
@@ -658,9 +653,17 @@ def show_current_model():
     print_colored(f"Current model: {DEFAULT_MODEL}", Fore.CYAN)
 
 def list_models():
-    models=ollama.list()
-    for model_info in models['models']:
-      print_colored(model_info['model'],Fore.CYAN)
+    models = client.models.list()
+    print("Available Models:")
+    for model in models:
+      print_colored(model.id,Fore.CYAN)
+
+async def change_editor():
+    global EDITOR_MODEL
+    new_model = await session.prompt_async(HTML(f"<ansired>Enter the new editor model name: </ansired> "))
+    EDITOR_MODEL = new_model
+    print_colored(f"Model changed to: {EDITOR_MODEL}", Fore.GREEN)
+    check_model_security()
 
 async def change_model():
     global DEFAULT_MODEL
@@ -832,6 +835,10 @@ async def main():
 
             if prompt.startswith("/change_model"):
                 await change_model()
+                continue
+
+            if prompt.startswith("/change_editor"):
+                await change_editor()
                 continue
 
             if prompt.startswith("/list_models"):
