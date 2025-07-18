@@ -1,8 +1,5 @@
 #!/bin/bash
 
-killall ollama >& /dev/null
-# need to use the full path or the conda version will run very slowly
-/hpc/apps/ollama/0.6.8/bin/ollama start >& /dev/null &
 pushd . > '/dev/null';
 SCRIPT_PATH="${BASH_SOURCE[0]:-$0}";
 
