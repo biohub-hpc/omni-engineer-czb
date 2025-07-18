@@ -223,14 +223,25 @@ def check_model(model):
       if( model == model_info.id ):
         print_colored(f"{model}:",Fore.CYAN)
         found = True
-        break
+        try:
+          response = requests.get("http://sam.clusternet:11434",timeout=5)
+          if response.status_code >= 200 and response.status_code < 300:
+             print_colored("Ollama is running",Fore.CYAN)
+          else:
+             print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
+             print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
+        except requests.exceptions.RequestException as e:
+          # Catch various request-related exceptions (e.g., ConnectionError, Timeout)
+          print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
+          print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
+        return True
     if( found != True ):
       print_colored("Selected Model is not available",Fore.CYAN)
+      return False
 
 def get_streaming_response(messages, model):
     """Get a streaming response from the AI model."""
     try:
-        check_model(model)
         stream = client.chat.completions.create(
             model=model,
             messages=messages,
@@ -294,10 +305,6 @@ def is_text_file(file_path, sample_size=8192, text_characters=set(bytes(range(32
     except IOError:
         return False
 
-def is_lbl_model(model_name):
-    """Check if the model name starts with 'lbl/'."""
-    return model_name.startswith("lbl/")
-
 def show_model_warning(model_name):
     """Display a warning message if a non-LBL model is selected."""
     print_colored(
@@ -305,15 +312,6 @@ def show_model_warning(model_name):
         \n""",
         Fore.YELLOW,
     )
-
-def check_model_security():
-    """Check and display warnings for both DEFAULT_MODEL and EDITOR_MODEL."""
-    if not is_lbl_model(DEFAULT_MODEL):
-        print_colored(f"DEFAULT_MODEL: {DEFAULT_MODEL}", Fore.CYAN)
-#       show_model_warning(DEFAULT_MODEL)
-    if not is_lbl_model(EDITOR_MODEL):
-        print_colored(f"EDITOR_MODEL: {EDITOR_MODEL}", Fore.CYAN)
-#       show_model_warning(EDITOR_MODEL)
 
 async def handle_add_command(chat_history, *paths):
     """Add files or directories to the chat history."""
@@ -631,7 +629,6 @@ def print_welcome_message():
         "Type '/stop' and press Enter at any time to interrupt the AI's response.",
         Fore.RED,
     )
-    check_model_security()
 
 def print_files_and_searches_in_memory():
     """Print the files and searches currently in memory."""
@@ -661,16 +658,16 @@ def list_models():
 async def change_editor():
     global EDITOR_MODEL
     new_model = await session.prompt_async(HTML(f"<ansired>Enter the new editor model name: </ansired> "))
-    EDITOR_MODEL = new_model
-    print_colored(f"Model changed to: {EDITOR_MODEL}", Fore.GREEN)
-    check_model_security()
+    if check_model(new_model):
+      EDITOR_MODEL = new_model
+      print_colored(f"Model changed to: {EDITOR_MODEL}", Fore.GREEN)
 
 async def change_model():
     global DEFAULT_MODEL
     new_model = await session.prompt_async(HTML(f"<ansired>Enter the new model name: </ansired> "))
-    DEFAULT_MODEL = new_model
-    print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
-    check_model_security()
+    if check_model(new_model):
+      DEFAULT_MODEL = new_model
+      print_colored(f"Model changed to: {DEFAULT_MODEL}", Fore.GREEN)
 
 def display_diff(original, edited):
     """Display the difference between original and edited content."""
