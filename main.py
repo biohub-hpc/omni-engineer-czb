@@ -629,6 +629,7 @@ def print_welcome_message():
         "Type '/stop' and press Enter at any time to interrupt the AI's response.",
         Fore.RED,
     )
+    show_current_model()
 
 def print_files_and_searches_in_memory():
     """Print the files and searches currently in memory."""
@@ -648,6 +649,7 @@ async def handle_help_command():
 
 def show_current_model():
     print_colored(f"Current model: {DEFAULT_MODEL}", Fore.CYAN)
+    print_colored(f"Editor model: {EDITOR_MODEL}", Fore.CYAN)
 
 def list_models():
     models = client.models.list()
