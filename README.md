@@ -1,4 +1,7 @@
-# CZB Fork of LBL's `https://github.com/lbnl-science-it/omni-engineer-lbl.git`
+# CZB Fork
+
+omni-engineer-czb is forked from LBL's `https://github.com/lbnl-science-it/omni-engineer-lbl.git`
+
  
 The CZB fork is preconfigured to work with Bruno and CZB'z Service for AI Models (sam.czbiohub.org).
 The CZB installation currently supports LLMs from OpenAI, Google/Gemini, and Ollama (running locally on Bruno)
