@@ -1,11 +1,17 @@
-# LBL Fork
+# CZB Fork of LBL's `https://github.com/lbnl-science-it/omni-engineer-lbl.git`
  
-The LBL fork is preconfigured to work with [CBORG](https://cborg.lbl.gov/). 
-To get started you must:
+The CZB fork is preconfigured to work with Bruno and CZB'z Service for AI Models (sam.czbiohub.org).
+The CZB installation currently supports LLMs from OpenAI, Google/Gemini, and Ollama (running locally on Bruno)
 
-1. Get an API key to use the CBORG service, available [here](https://cborg.lbl.gov/api_request/).
-2. Set an environment variable on your machine for `CBORG_API_KEY`. Please use the best practices for API key management described [here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety).
-3. The code defaults to the `lbl/cborg-coder:latest` model. If you want to choose another model (for example, Anthropic's Claude 3.5), you must edit the code in `main.py`by uncommenting the relevant models and commenting the existing ones.  
+Omni-Engineer is available as a module on bruno and after loading can be started with the command "omni-engineer"
+
+The code defaults to the `openai/gpt-4` model for queries and `openai/gpt-3.5-turbo` for editing. 
+If you want to choose another model you can get the list of available models with the command `/list_models`, and then
+change the default model with the command `/change_model` or change the editor model with the command `/change_editor`.
+Note that if an ollama model is selected, omni-engineer will check to see if ollama is currently available via 
+http://sam.clusternet:11434. If it is not available, a new 4 hour job will be launched on Bruno to serve ollama models.
+If a new ollama instance must be launched, there will be a slight delay before the model responds initially, but furhter
+queries should be quick. 
  
 This fork also includes a tool `format_omni_markdown.py` to format saved Markdown chat logs from Omni Engineer for easy reading.   
 
@@ -54,6 +60,8 @@ Omni Engineer is a spiritual successor to [Claude Engineer](https://github.com/D
 - `/help`: Display available commands
 - `/model`: Show current AI model
 - `/change_model`: Change the AI model
+- `/change_editor`: Change the AI editing model
+- `/list_models`: List currently available models
 - `/show <filepath>`: Display content of a file
 
 ## 🚀 Installation
@@ -61,18 +69,18 @@ Omni Engineer is a spiritual successor to [Claude Engineer](https://github.com/D
 1. Clone the repository:
    Go to the directory of your choice, then 
    ```
-   git clone https://github.com/lbnl-science-it/omni-engineer-lbl
+   git clone https://github.com/biohub-hpc/omni-engineer-czb.git
    
    ```
-   Switch to the ```utilities``` branch
+   Switch to the ```version/1.1.0``` branch
    ```
-   git checkout utilities
+   git checkout version/1.1.0 
    ````
 2. Install the required packages:
    ```
    pip install -r requirements.txt
    ```
-2. Set an environment variable on your machine for `CBORG_API_KEY`. Please use the best practices for API key management described [here](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety).
+2. Configure main.py to connect to a LiteLLM proxy server (use http://sam.clusternet:8000/v1 within CZB)
 4. Run the main script:
    ```
    python main.py 
