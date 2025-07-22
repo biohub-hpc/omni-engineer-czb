@@ -223,17 +223,18 @@ def check_model(model):
       if( model == model_info.id ):
         print_colored(f"{model}:",Fore.CYAN)
         found = True
-        try:
-          response = requests.get("http://sam.clusternet:11434",timeout=5)
-          if response.status_code >= 200 and response.status_code < 300:
-             print_colored("Ollama is running",Fore.CYAN)
-          else:
-             print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
-             print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
-        except requests.exceptions.RequestException as e:
-          # Catch various request-related exceptions (e.g., ConnectionError, Timeout)
-          print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
-          print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
+        if "ollama" in model:
+          try:
+            response = requests.get("http://sam.clusternet:11434",timeout=5)
+            if response.status_code >= 200 and response.status_code < 300:
+               print_colored("Ollama is running",Fore.CYAN)
+            else:
+               print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
+               print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
+          except requests.exceptions.RequestException as e:
+            # Catch various request-related exceptions (e.g., ConnectionError, Timeout)
+            print_colored("Ollama is not running, starting a GPU node to serve {}".format(model_info.id),Fore.CYAN)
+            print_colored("Initial model response might be slightly delayed.",Fore.CYAN)
         return True
     if( found != True ):
       print_colored("Selected Model is not available",Fore.CYAN)
@@ -654,7 +655,10 @@ def show_current_model():
 def list_models():
     models = client.models.list()
     print("Available Models:")
-    for model in models:
+    # Sort the models alphabetically
+    sorted_models = sorted(models, key=lambda model: model.id)
+
+    for model in sorted_models:
       print_colored(model.id,Fore.CYAN)
 
 async def change_editor():
